@@ -40,6 +40,20 @@ npm run build    # build di produzione
 npm run lint     # ESLint
 ```
 
+## Deploy su Vercel
+
+1. **Root Directory:** imposta `frontend` (Project Settings → General).
+2. **Environment Variables** (Environment **Production**, e Preview se serve):
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - `SUPABASE_SECRET_KEY`
+3. Usa i **nomi esatti** sopra (non `ANON_KEY` / `SERVICE_ROLE_KEY`).
+4. Dopo ogni modifica alle variabili `NEXT_PUBLIC_*`: **Redeploy** (sono incluse nel build).
+5. Su Supabase (Dashboard → Authentication → URL Configuration) aggiungi il dominio Vercel in **Site URL** e **Redirect URLs**.
+6. Abilita l'hook JWT `public.custom_access_token_hook` (Authentication → Hooks).
+
+Se le variabili mancano in produzione, l'app reindirizza a `/configurazione` invece di mostrare un Internal Server Error.
+
 ## Primo accesso (superadmin)
 
 Solo gli account con ruolo `superadmin`/`admin` (in `app_metadata.role`) accedono al pannello.

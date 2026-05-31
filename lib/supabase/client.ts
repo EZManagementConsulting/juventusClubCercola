@@ -1,11 +1,10 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/lib/database.types";
+import { assertSupabasePublicEnv } from "@/lib/supabase/env";
 
 // Client Supabase per i Client Component (browser).
 // Usa SOLO la chiave publishable, mai la secret.
 export function createClient() {
-  return createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-  );
+  const { url, key } = assertSupabasePublicEnv();
+  return createBrowserClient<Database>(url, key);
 }

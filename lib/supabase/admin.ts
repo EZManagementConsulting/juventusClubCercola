@@ -13,9 +13,14 @@ export function createAdminClient() {
     );
   }
 
-  return createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    secretKey,
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  if (!url) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL mancante: impossibile creare il client admin.",
+    );
+  }
+
+  return createClient<Database>(url, secretKey,
     {
       auth: {
         autoRefreshToken: false,

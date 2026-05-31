@@ -1,16 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
+import { assertSupabasePublicEnv } from "@/lib/supabase/env";
 
 // Client Supabase per Server Component / Server Action / Route Handler.
 // Legge e scrive i cookie di sessione tramite next/headers.
 export async function createClient() {
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
+  const { url, key } = assertSupabasePublicEnv();
+
+  return createServerClient<Database>(url, key, {
       cookies: {
         getAll() {
           return cookieStore.getAll();

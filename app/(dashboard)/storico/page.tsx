@@ -83,15 +83,14 @@ export default async function StoricoPage({
               </TableRow>
             ) : (
               (usages ?? []).map((usage) => {
-                const discountInfo = usage.discounts as { title: string } | null;
-                const socio = usage.socio_profiles as {
-                  codice_socio: string;
-                  users: { name: string | null; surname: string | null } | null;
-                } | null;
-                const member = usage.users as {
-                  name: string | null;
-                  surname: string | null;
-                } | null;
+                const discountRel = usage.discounts;
+                const discountInfo = Array.isArray(discountRel) ? discountRel[0] : discountRel;
+                const socioRel = usage.socio_profiles;
+                const socio = Array.isArray(socioRel) ? socioRel[0] : socioRel;
+                const userRel = socio?.users;
+                const socioUser = Array.isArray(userRel) ? userRel[0] : userRel;
+                const memberRel = usage.users;
+                const member = Array.isArray(memberRel) ? memberRel[0] : memberRel;
                 return (
                   <TableRow key={usage.id}>
                     <TableCell className="whitespace-nowrap">
@@ -99,7 +98,7 @@ export default async function StoricoPage({
                     </TableCell>
                     <TableCell>{discountInfo?.title ?? "—"}</TableCell>
                     <TableCell>
-                      {[socio?.users?.name, socio?.users?.surname]
+                      {[socioUser?.name, socioUser?.surname]
                         .filter(Boolean)
                         .join(" ") ||
                         socio?.codice_socio ||

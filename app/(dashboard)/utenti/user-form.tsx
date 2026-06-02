@@ -19,6 +19,7 @@ type UserDefaults = {
   surname?: string | null;
   phone?: string | null;
   role_id?: string | null;
+  role_ids?: string[];
   status?: "active" | "inactive";
 };
 
@@ -31,6 +32,10 @@ export function UserForm({
   roles: RoleOption[];
   defaults?: UserDefaults;
 }) {
+  const selectedRoleIds =
+    defaults?.role_ids ??
+    (defaults?.role_id ? [defaults.role_id] : []);
+
   return (
     <>
       {mode === "edit" && defaults?.id ? (
@@ -69,33 +74,57 @@ export function UserForm({
         <Input id="phone" name="phone" defaultValue={defaults?.phone ?? ""} />
       </Field>
 
-      <Field label="Ruolo">
-        <Select name="role_id" defaultValue={defaults?.role_id ?? undefined}>
-          <SelectTrigger>
-            <SelectValue placeholder="Seleziona un ruolo" />
-          </SelectTrigger>
-          <SelectContent>
-            {roles.map((role) => (
-              <SelectItem key={role.id} value={role.id}>
-                {ROLE_LABELS[role.name as AppRole] ?? role.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <Field label="Ruoli" hint="Seleziona uno o piu ruoli applicativi.">
+        <div className="space-y-2 rounded-md border border-border p-3">
+          {roles.map((role) => (
+            <label key={role.id} className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="role_ids"
+                value={role.id}
+                defaultChecked={selectedRoleIds.includes(role.id)}
+                className="h-4 w-4 rounded border-border"
+              />
+              <span>{ROLE_LABELS[role.name as AppRole] ?? role.label}</span>
+            </label>
+          ))}
+        </div>
       </Field>
 
       {mode === "edit" ? (
-        <Field label="Stato">
-          <Select name="status" defaultValue={defaults?.status ?? "active"}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Attivo</SelectItem>
-              <SelectItem value="inactive">Disattivato</SelectItem>
-            </SelectContent>
-          </Select>
-        </Field>
+        <>
+          <Field label="Ruolo primario" hint="Usato per display e retrocompatibilita JWT.">
+            <Select
+              name="primary_role_id"
+              defaultValue={defaults?.role_id ?? selectedRoleIds[0]}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleziona ruolo primario" />
+              </SelectTrigger>
+              <SelectContent>
+                {roles
+                  .filter((role) => selectedRoleIds.includes(role.id))
+                  .map((role) => (
+                    <SelectItem key={role.id} value={role.id}>
+                      {ROLE_LABELS[role.name as AppRole] ?? role.label}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field label="Stato">
+            <Select name="status" defaultValue={defaults?.status ?? "active"}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Attivo</SelectItem>
+                <SelectItem value="inactive">Disattivato</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+        </>
       ) : null}
     </>
   );

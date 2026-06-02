@@ -4,38 +4,37 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/form-dialog";
 import { DeleteDialog } from "@/components/delete-dialog";
-import { updateMember, deleteMember } from "@/lib/actions/membri";
-import { MemberForm } from "./member-form";
+import { updateSection, deleteSection } from "@/lib/actions/sections";
+import { SectionForm } from "./section-form";
 
-type MemberRow = {
+type SectionRow = {
   id: string;
-  name: string | null;
-  surname: string | null;
-  phone: string | null;
+  name: string;
+  code: string;
   status: "active" | "inactive";
 };
 
-export function MemberRowActions({ member }: { member: MemberRow }) {
+export function SectionRowActions({ section }: { section: SectionRow }) {
   return (
     <div className="flex justify-end gap-1">
       <FormDialog
-        title="Modifica membro"
-        submitLabel="Salva modifiche"
-        action={updateMember}
+        title="Modifica sezione"
+        submitLabel="Salva"
+        action={updateSection}
         trigger={
           <Button variant="ghost" size="icon" aria-label="Modifica">
             <Pencil className="h-4 w-4" />
           </Button>
         }
       >
-        <MemberForm mode="edit" defaults={member} />
+        <SectionForm mode="edit" defaults={section} />
       </FormDialog>
 
       <DeleteDialog
-        id={member.id}
-        action={deleteMember}
-        title="Eliminare questo membro?"
-        description="L'account del membro verra rimosso definitivamente."
+        id={section.id}
+        action={deleteSection}
+        title="Eliminare questa sezione?"
+        description="Consentito solo se non ci sono tessere associate."
         trigger={
           <Button
             variant="ghost"

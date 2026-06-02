@@ -27,9 +27,9 @@ export default async function StatistichePage() {
     { data: membroRole },
     { data: usages },
   ] = await Promise.all([
-    supabase.from("socio_profiles").select("*", { count: "exact", head: true }),
+    supabase.from("club_member_profiles").select("*", { count: "exact", head: true }),
     supabase
-      .from("socio_profiles")
+      .from("club_member_profiles")
       .select("*", { count: "exact", head: true })
       .eq("status", "active"),
     supabase.from("discounts").select("*", { count: "exact", head: true }),
@@ -38,7 +38,7 @@ export default async function StatistichePage() {
       .select("*", { count: "exact", head: true })
       .eq("status", "active"),
     supabase.from("discount_usages").select("*", { count: "exact", head: true }),
-    supabase.from("roles").select("id").eq("name", "membro").maybeSingle(),
+    supabase.from("roles").select("id").eq("name", "operatore_partner").maybeSingle(),
     supabase
       .from("discount_usages")
       .select("discount_id, discounts(title)")

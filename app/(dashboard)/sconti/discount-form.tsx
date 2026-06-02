@@ -1,6 +1,7 @@
 "use client";
 
 import { Field } from "@/components/form/field";
+import { BusinessHoursFields } from "@/components/form/business-hours-fields";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -13,6 +14,7 @@ import {
 import type {
   DiscountStatus,
   DiscountType,
+  Json,
 } from "@/lib/database.types";
 
 type DiscountDefaults = {
@@ -25,6 +27,12 @@ type DiscountDefaults = {
   expiry_date?: string | null;
   usage_limit?: number | null;
   status?: DiscountStatus;
+  phone?: string | null;
+  address?: string | null;
+  website?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  business_hours?: Json | null;
 };
 
 export function DiscountForm({
@@ -128,6 +136,62 @@ export function DiscountForm({
             </SelectContent>
           </Select>
         </Field>
+      </div>
+
+      <div className="border-t border-border pt-4">
+        <p className="mb-3 text-sm font-medium">Attività / contatti</p>
+        <div className="space-y-4">
+          <Field label="Telefono" htmlFor="phone">
+            <Input
+              id="phone"
+              name="phone"
+              type="tel"
+              defaultValue={defaults?.phone ?? ""}
+              placeholder="+39 081 000 0000"
+            />
+          </Field>
+          <Field label="Indirizzo" htmlFor="address">
+            <Input
+              id="address"
+              name="address"
+              defaultValue={defaults?.address ?? ""}
+              placeholder="Via Roma 14, Cercola (NA)"
+            />
+          </Field>
+          <Field label="Sito web" htmlFor="website" hint="URL o dominio (es. www.esempio.it)">
+            <Input
+              id="website"
+              name="website"
+              defaultValue={defaults?.website ?? ""}
+              placeholder="www.esempio.it"
+            />
+          </Field>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Latitudine" htmlFor="latitude">
+              <Input
+                id="latitude"
+                name="latitude"
+                type="number"
+                step="any"
+                defaultValue={defaults?.latitude ?? ""}
+                placeholder="40.8631"
+              />
+            </Field>
+            <Field label="Longitudine" htmlFor="longitude">
+              <Input
+                id="longitude"
+                name="longitude"
+                type="number"
+                step="any"
+                defaultValue={defaults?.longitude ?? ""}
+                placeholder="14.3583"
+              />
+            </Field>
+          </div>
+          <Field label="Orari di apertura">
+            <BusinessHoursFields defaultValue={defaults?.business_hours} />
+          </Field>
+        </div>
       </div>
     </>
   );

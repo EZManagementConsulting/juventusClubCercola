@@ -1,21 +1,25 @@
 "use client";
 
-import { Pencil, Power, QrCode, Trash2 } from "lucide-react";
+import { CalendarSync, Pencil, Power, QrCode, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/form-dialog";
 import { DeleteDialog } from "@/components/delete-dialog";
 import { ActionButton } from "@/components/action-button";
+import type { SectionOption } from "@/components/form/section-select-field";
 import {
-  updateSocio,
-  deleteSocio,
-  toggleSocioStatus,
+  updateTesserato,
+  deleteTesserato,
+  toggleTesseratoStatus,
   regenerateQrToken,
-} from "@/lib/actions/soci";
+  renewClubMembership,
+} from "@/lib/actions/tesserati";
 import { SocioForm } from "./socio-form";
+import { RenewMembershipForm } from "./renew-membership-form";
 
 type SocioRow = {
   id: string;
   user_id: string;
+  section_id: string;
   name: string | null;
   surname: string | null;
   phone: string | null;
@@ -24,9 +28,16 @@ type SocioRow = {
   membership_start: string | null;
   membership_expiry: string | null;
   status: "active" | "inactive";
+  also_operatore_partner?: boolean;
 };
 
-export function SocioRowActions({ socio }: { socio: SocioRow }) {
+export function SocioRowActions({
+  socio,
+  sections,
+}: {
+  socio: SocioRow;
+  sections: SectionOption[];
+}) {
   return (
     <div className="flex justify-end gap-1">
       <ActionButton
@@ -38,7 +49,7 @@ export function SocioRowActions({ socio }: { socio: SocioRow }) {
       </ActionButton>
 
       <ActionButton
-        action={toggleSocioStatus}
+        action={toggleTesseratoStatus}
         hidden={{ id: socio.id, status: socio.status }}
         ariaLabel={socio.status === "active" ? "Disattiva" : "Attiva"}
       >
@@ -46,23 +57,41 @@ export function SocioRowActions({ socio }: { socio: SocioRow }) {
       </ActionButton>
 
       <FormDialog
-        title="Modifica socio"
+        title="Rinnova tessera"
+        description="Registra il rinnovo stagionale e aggiorna le date di validità."
+        submitLabel="Conferma rinnovo"
+        action={renewClubMembership}
+        trigger={
+          <Button variant="ghost" size="icon" aria-label="Rinnova tessera">
+            <CalendarSync className="h-4 w-4" />
+          </Button>
+        }
+      >
+        <RenewMembershipForm
+          profileId={socio.id}
+          cardNumber={socio.card_number}
+          currentExpiry={socio.membership_expiry}
+        />
+      </FormDialog>
+
+      <FormDialog
+        title="Modifica tesserato"
         submitLabel="Salva modifiche"
-        action={updateSocio}
+        action={updateTesserato}
         trigger={
           <Button variant="ghost" size="icon" aria-label="Modifica">
             <Pencil className="h-4 w-4" />
           </Button>
         }
       >
-        <SocioForm mode="edit" defaults={socio} />
+        <SocioForm mode="edit" sections={sections} defaults={socio} />
       </FormDialog>
 
       <DeleteDialog
         id={socio.user_id}
-        action={deleteSocio}
-        title="Eliminare questo socio?"
-        description="Verranno rimossi l'account, il profilo socio e gli sconti associati."
+        action={deleteTesserato}
+        title="Eliminare questo tesserato?"
+        description="Verranno rimossi l'account, il profilo tessera e gli sconti associati."
         trigger={
           <Button
             variant="ghost"

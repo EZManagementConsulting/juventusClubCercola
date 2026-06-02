@@ -4,17 +4,12 @@ import type {
   SocioDiscountStatus,
 } from "@/lib/database.types";
 
-export type AppRole = "superadmin" | "admin" | "socio" | "membro";
+export type { AppRole } from "@/lib/app-roles";
+export { APP_ROLES, LEGACY_ROLE_ALIASES, ROLE_LABELS, normalizeAppRole, normalizeAppRoles } from "@/lib/app-roles";
+import type { AppRole } from "@/lib/app-roles";
 
 // Ruoli che possono accedere al pannello web amministrativo.
 export const WEB_ROLES: AppRole[] = ["superadmin", "admin"];
-
-export const ROLE_LABELS: Record<AppRole, string> = {
-  superadmin: "Superadmin",
-  admin: "Admin",
-  socio: "Socio",
-  membro: "Membro",
-};
 
 // Voci di navigazione della dashboard, filtrate per ruolo.
 export type NavItem = {
@@ -29,9 +24,22 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/utenti", label: "Utenti", icon: "Users", roles: ["superadmin"] },
   { href: "/ruoli", label: "Ruoli", icon: "ShieldCheck", roles: ["superadmin"] },
   { href: "/permessi", label: "Permessi", icon: "KeyRound", roles: ["superadmin"] },
-  { href: "/soci", label: "Soci", icon: "IdCard", roles: ["superadmin", "admin"] },
-  { href: "/membri", label: "Membri", icon: "UserCog", roles: ["superadmin", "admin"] },
-  { href: "/sconti", label: "Sconti", icon: "Tag", roles: ["superadmin", "admin"] },
+  { href: "/tesserati", label: "Tesserati", icon: "IdCard", roles: ["superadmin", "admin"] },
+  {
+    href: "/operatori-partner",
+    label: "Operatori partner",
+    icon: "UserCog",
+    roles: ["superadmin", "admin"],
+  },
+  { href: "/sezioni", label: "Sezioni", icon: "MapPin", roles: ["superadmin", "admin"] },
+  { href: "/catalogo-sconti", label: "Catalogo sconti", icon: "Layers", roles: ["superadmin", "admin"] },
+  { href: "/partner", label: "Partner", icon: "Store", roles: ["superadmin", "admin"] },
+  {
+    href: "/sconti",
+    label: "Sconti MVP (legacy)",
+    icon: "Tag",
+    roles: ["superadmin"],
+  },
   { href: "/storico", label: "Storico sconti", icon: "History", roles: ["superadmin", "admin"] },
   { href: "/statistiche", label: "Statistiche", icon: "BarChart3", roles: ["superadmin", "admin"] },
   { href: "/impostazioni", label: "Impostazioni", icon: "Settings", roles: ["superadmin"] },
@@ -60,4 +68,22 @@ export const SOCIO_DISCOUNT_STATUS_LABELS: Record<SocioDiscountStatus, string> =
 export const USER_STATUS_LABELS: Record<"active" | "inactive", string> = {
   active: "Attivo",
   inactive: "Disattivato",
+};
+
+export const TEMPLATE_STATUS_LABELS: Record<"active" | "inactive", string> = {
+  active: "Attivo",
+  inactive: "Inattivo",
+};
+
+export const PARTNER_STATUS_LABELS: Record<"active" | "inactive", string> = {
+  active: "Attivo",
+  inactive: "Inattivo",
+};
+
+export const PARTNER_CATEGORY_LABELS: Record<string, string> = {
+  ristorazione: "Ristorazione",
+  sport: "Sport",
+  abbigliamento: "Abbigliamento",
+  benessere: "Benessere",
+  altro: "Altro",
 };

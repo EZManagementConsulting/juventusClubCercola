@@ -21,6 +21,12 @@ type DiscountRow = {
   expiry_date: string | null;
   usage_limit: number | null;
   status: DiscountStatus;
+  phone?: string | null;
+  address?: string | null;
+  website?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  business_hours?: import("@/lib/database.types").Json | null;
 };
 
 export function DiscountRowActions({ discount }: { discount: DiscountRow }) {

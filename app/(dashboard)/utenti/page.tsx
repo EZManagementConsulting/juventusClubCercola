@@ -28,7 +28,19 @@ export default async function UtentiPage() {
   const [{ data: users }, { data: roles }] = await Promise.all([
     supabase
       .from("users")
-      .select("id, name, surname, email, phone, status, role_id, roles(name, label)")
+      .select(
+        `
+        id,
+        name,
+        surname,
+        email,
+        phone,
+        status,
+        role_id,
+        roles ( name, label ),
+        user_roles ( role_id, roles ( name, label ) )
+      `,
+      )
       .order("created_at", { ascending: false }),
     supabase.from("roles").select("id, name, label").order("name"),
   ]);
@@ -63,7 +75,7 @@ export default async function UtentiPage() {
               <TableHead>Nome</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Telefono</TableHead>
-              <TableHead>Ruolo</TableHead>
+              <TableHead>Ruoli</TableHead>
               <TableHead>Stato</TableHead>
               <TableHead className="text-right">Azioni</TableHead>
             </TableRow>
@@ -77,7 +89,16 @@ export default async function UtentiPage() {
               </TableRow>
             ) : (
               (users ?? []).map((user) => {
-                const role = user.roles as { name: string; label: string } | null;
+                const userRoles = user.user_roles as {
+                  role_id: string;
+                  roles: { name: string; label: string } | null;
+                }[];
+                const roleLabels = userRoles
+                  .map((ur) => ur.roles?.name)
+                  .filter(Boolean)
+                  .map((name) => ROLE_LABELS[name as AppRole] ?? name)
+                  .join(", ");
+
                 return (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">
@@ -85,11 +106,7 @@ export default async function UtentiPage() {
                     </TableCell>
                     <TableCell>{user.email ?? "—"}</TableCell>
                     <TableCell>{user.phone ?? "—"}</TableCell>
-                    <TableCell>
-                      {role
-                        ? ROLE_LABELS[role.name as AppRole] ?? role.label
-                        : "—"}
-                    </TableCell>
+                    <TableCell>{roleLabels || "—"}</TableCell>
                     <TableCell>
                       <StatusBadge
                         status={user.status}
@@ -104,6 +121,7 @@ export default async function UtentiPage() {
                           surname: user.surname,
                           phone: user.phone,
                           role_id: user.role_id,
+                          role_ids: userRoles.map((ur) => ur.role_id),
                           status: user.status,
                         }}
                         roles={roleOptions}

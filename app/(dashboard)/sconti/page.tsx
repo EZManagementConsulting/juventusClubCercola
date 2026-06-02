@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Plus, Users } from "lucide-react";
-import { requireRole } from "@/lib/auth";
+import { requireLegacyScontiAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createDiscount } from "@/lib/actions/sconti";
 import {
@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { DiscountType } from "@/lib/database.types";
+import { LegacyDeprecationBanner } from "@/components/legacy-deprecation-banner";
 import { DiscountForm } from "./discount-form";
 import { DiscountRowActions } from "./discount-row-actions";
 
@@ -34,21 +35,21 @@ function formatValue(type: DiscountType, value: number | null) {
 }
 
 export default async function ScontiPage() {
-  await requireRole(["superadmin", "admin"]);
+  await requireLegacyScontiAccess();
   const supabase = await createClient();
 
   const { data: discounts } = await supabase
     .from("discounts")
     .select(
-      "id, title, description, type, value, start_date, expiry_date, usage_limit, status, socio_discounts(count)",
+      "id, title, description, type, value, start_date, expiry_date, usage_limit, status, phone, address, website, latitude, longitude, business_hours, member_discount_assignments(count)",
     )
     .order("created_at", { ascending: false });
 
   return (
     <div>
       <PageHeader
-        title="Sconti"
-        description="Crea sconti personalizzati e assegnali ai soci del club."
+        title="Sconti MVP (legacy)"
+        description="Compatibilità con flussi e codici esistenti. Preferire Partner e Catalogo sconti."
       >
         <FormDialog
           title="Nuovo sconto"
@@ -65,6 +66,8 @@ export default async function ScontiPage() {
         </FormDialog>
       </PageHeader>
 
+      <LegacyDeprecationBanner />
+
       <Card>
         <Table>
           <TableHeader>
@@ -73,7 +76,7 @@ export default async function ScontiPage() {
               <TableHead>Tipo</TableHead>
               <TableHead>Valore</TableHead>
               <TableHead>Scadenza</TableHead>
-              <TableHead>Soci</TableHead>
+              <TableHead>Tesserati</TableHead>
               <TableHead>Stato</TableHead>
               <TableHead className="text-right">Azioni</TableHead>
             </TableRow>
@@ -88,7 +91,7 @@ export default async function ScontiPage() {
             ) : (
               (discounts ?? []).map((discount) => {
                 const assignedCount =
-                  (discount.socio_discounts as { count: number }[] | null)?.[0]
+                  (discount.member_discount_assignments as { count: number }[] | null)?.[0]
                     ?.count ?? 0;
                 return (
                   <TableRow key={discount.id}>
@@ -108,7 +111,7 @@ export default async function ScontiPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="Assegna ai soci"
+                          aria-label="Assegna ai tesserati"
                           asChild
                         >
                           <Link href={`/sconti/${discount.id}`}>
@@ -126,6 +129,12 @@ export default async function ScontiPage() {
                             expiry_date: discount.expiry_date,
                             usage_limit: discount.usage_limit,
                             status: discount.status,
+                            phone: discount.phone,
+                            address: discount.address,
+                            website: discount.website,
+                            latitude: discount.latitude,
+                            longitude: discount.longitude,
+                            business_hours: discount.business_hours,
                           }}
                         />
                       </div>

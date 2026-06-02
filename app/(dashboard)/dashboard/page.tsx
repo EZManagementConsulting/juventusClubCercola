@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const metadata = { title: "Panoramica — Cercola Admin" };
 
 async function countRows(
-  table: "socio_profiles" | "discounts" | "discount_usages",
+  table: "club_member_profiles" | "discounts" | "discount_usages",
   filter?: { column: string; value: string },
 ) {
   const supabase = await createClient();
@@ -22,7 +22,7 @@ async function countMembers() {
   const { data: role } = await supabase
     .from("roles")
     .select("id")
-    .eq("name", "membro")
+    .eq("name", "operatore_partner")
     .maybeSingle();
   if (!role) return 0;
   const { count } = await supabase
@@ -36,7 +36,7 @@ export default async function DashboardPage() {
   await requireWebAccess();
 
   const [sociAttivi, scontiAttivi, utilizzi, membri] = await Promise.all([
-    countRows("socio_profiles", { column: "status", value: "active" }),
+    countRows("club_member_profiles", { column: "status", value: "active" }),
     countRows("discounts", { column: "status", value: "active" }),
     countRows("discount_usages"),
     countMembers(),

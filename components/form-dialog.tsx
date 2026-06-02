@@ -4,6 +4,7 @@ import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { idleState, type ActionState } from "@/lib/actions/types";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,7 @@ export function FormDialog({
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const mounted = useMounted();
 
   function onSubmit(formData: FormData) {
     startTransition(async () => {
@@ -50,6 +52,11 @@ export function FormDialog({
         toast.error(result.message);
       }
     });
+  }
+
+  // Radix assegna id (aria-controls) solo lato client: evita hydration mismatch.
+  if (!mounted) {
+    return trigger;
   }
 
   return (

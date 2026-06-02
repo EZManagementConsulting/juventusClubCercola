@@ -4,6 +4,7 @@ import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { idleState, type ActionState } from "@/lib/actions/types";
+import { useMounted } from "@/lib/hooks/use-mounted";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +38,7 @@ export function DeleteDialog({
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const mounted = useMounted();
 
   function onConfirm() {
     startTransition(async () => {
@@ -51,6 +53,10 @@ export function DeleteDialog({
         toast.error(result.message);
       }
     });
+  }
+
+  if (!mounted) {
+    return trigger;
   }
 
   return (

@@ -9,33 +9,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  SectionSelectField,
+  type SectionOption,
+} from "@/components/form/section-select-field";
 
-type SocioDefaults = {
+type MemberDefaults = {
   id?: string;
-  user_id?: string;
+  profile_id?: string;
+  section_id?: string;
   name?: string | null;
   surname?: string | null;
   phone?: string | null;
-  codice_socio?: string;
+  codice_socio?: string | null;
   card_number?: string | null;
   membership_start?: string | null;
   membership_expiry?: string | null;
   status?: "active" | "inactive";
+  also_tesserato?: boolean;
 };
 
-export function SocioForm({
+export function MemberForm({
   mode,
+  sections,
   defaults,
 }: {
   mode: "create" | "edit";
-  defaults?: SocioDefaults;
+  sections: SectionOption[];
+  defaults?: MemberDefaults;
 }) {
   return (
     <>
       {mode === "edit" && defaults?.id ? (
         <>
           <input type="hidden" name="id" value={defaults.id} />
-          <input type="hidden" name="user_id" value={defaults.user_id} />
+          {defaults.profile_id ? (
+            <input type="hidden" name="profile_id" value={defaults.profile_id} />
+          ) : null}
+          {defaults.section_id ? (
+            <input type="hidden" name="section_id" value={defaults.section_id} />
+          ) : null}
         </>
       ) : null}
 
@@ -68,9 +81,24 @@ export function SocioForm({
         <Input id="phone" name="phone" defaultValue={defaults?.phone ?? ""} />
       </Field>
 
+      {mode === "create" ? (
+        <SectionSelectField sections={sections} defaultValue={defaults?.section_id} />
+      ) : (
+        <>
+          <SectionSelectField
+            sections={sections}
+            defaultValue={defaults?.section_id}
+            disabled
+          />
+          <Field label="Numero tessera">
+            <Input value={defaults?.card_number ?? "—"} readOnly disabled className="font-mono" />
+          </Field>
+        </>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field
-          label="Codice socio"
+          label="Codice identificativo"
           htmlFor="codice_socio"
           hint={mode === "create" ? "Lascia vuoto per generarlo." : undefined}
         >
@@ -78,14 +106,6 @@ export function SocioForm({
             id="codice_socio"
             name="codice_socio"
             defaultValue={defaults?.codice_socio ?? ""}
-            required={mode === "edit"}
-          />
-        </Field>
-        <Field label="Numero tessera" htmlFor="card_number">
-          <Input
-            id="card_number"
-            name="card_number"
-            defaultValue={defaults?.card_number ?? ""}
           />
         </Field>
       </div>
@@ -108,6 +128,18 @@ export function SocioForm({
           />
         </Field>
       </div>
+
+      <Field label="Ruolo aggiuntivo">
+        <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="also_tesserato"
+            defaultChecked={defaults?.also_tesserato ?? false}
+            className="h-4 w-4 rounded border-border"
+          />
+          <span>Anche tesserato (beneficiario sconti e tessera)</span>
+        </label>
+      </Field>
 
       {mode === "edit" ? (
         <Field label="Stato">

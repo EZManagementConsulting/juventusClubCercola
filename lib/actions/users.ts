@@ -3,24 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureRole } from "@/lib/actions/guard";
+import { syncUserRoles } from "@/lib/actions/user-roles";
 import {
   errorState,
   successState,
   type ActionState,
 } from "@/lib/actions/types";
 import { createUserSchema, updateUserSchema } from "@/lib/validations";
-
-async function roleNameById(
-  admin: ReturnType<typeof createAdminClient>,
-  roleId: string,
-): Promise<string | null> {
-  const { data } = await admin
-    .from("roles")
-    .select("name")
-    .eq("id", roleId)
-    .maybeSingle();
-  return data?.name ?? null;
-}
 
 export async function createUser(
   _prev: ActionState,
@@ -29,20 +18,32 @@ export async function createUser(
   const guard = await ensureRole(["superadmin"]);
   if (!guard.ok) return errorState("Non autorizzato.");
 
-  const parsed = createUserSchema.safeParse(Object.fromEntries(formData));
+  const parsed = createUserSchema.safeParse({
+    ...Object.fromEntries(formData),
+    role_ids: formData.getAll("role_ids"),
+  });
   if (!parsed.success) {
     return errorState(parsed.error.issues[0]?.message ?? "Dati non validi");
   }
 
   const admin = createAdminClient();
-  const roleName = await roleNameById(admin, parsed.data.role_id);
-  if (!roleName) return errorState("Ruolo non trovato.");
+  const { data: selectedRoles } = await admin
+    .from("roles")
+    .select("id, name")
+    .in("id", parsed.data.role_ids);
 
-  const { error } = await admin.auth.admin.createUser({
+  if ((selectedRoles ?? []).length !== parsed.data.role_ids.length) {
+    return errorState("Uno o piu ruoli non trovati.");
+  }
+
+  const roleNames = selectedRoles!.map((r) => r.name);
+  const primaryRoleName = roleNames[0]!;
+
+  const { data: created, error } = await admin.auth.admin.createUser({
     email: parsed.data.email,
     password: parsed.data.password,
     email_confirm: true,
-    app_metadata: { role: roleName },
+    app_metadata: { role: primaryRoleName, roles: roleNames },
     user_metadata: {
       name: parsed.data.name,
       surname: parsed.data.surname,
@@ -50,8 +51,14 @@ export async function createUser(
     },
   });
 
-  if (error) {
-    return errorState(`Errore nella creazione: ${error.message}`);
+  if (error || !created.user) {
+    return errorState(`Errore nella creazione: ${error?.message ?? "sconosciuto"}`);
+  }
+
+  const sync = await syncUserRoles(admin, created.user.id, roleNames, primaryRoleName);
+  if (sync.error) {
+    await admin.auth.admin.deleteUser(created.user.id);
+    return errorState(`Errore ruoli: ${sync.error}`);
   }
 
   revalidatePath("/utenti");
@@ -65,23 +72,38 @@ export async function updateUser(
   const guard = await ensureRole(["superadmin"]);
   if (!guard.ok) return errorState("Non autorizzato.");
 
-  const parsed = updateUserSchema.safeParse(Object.fromEntries(formData));
+  const parsed = updateUserSchema.safeParse({
+    ...Object.fromEntries(formData),
+    role_ids: formData.getAll("role_ids"),
+  });
   if (!parsed.success) {
     return errorState(parsed.error.issues[0]?.message ?? "Dati non validi");
   }
 
-  const admin = createAdminClient();
-  const roleName = await roleNameById(admin, parsed.data.role_id);
-  if (!roleName) return errorState("Ruolo non trovato.");
-
-  // Aggiorna il ruolo anche in app_metadata (usato dal JWT/RLS).
-  const { error: authError } = await admin.auth.admin.updateUserById(
-    parsed.data.id,
-    { app_metadata: { role: roleName } },
-  );
-  if (authError) {
-    return errorState(`Errore aggiornamento ruolo: ${authError.message}`);
+  if (!parsed.data.role_ids.includes(parsed.data.primary_role_id)) {
+    return errorState("Il ruolo primario deve essere tra i ruoli selezionati.");
   }
+
+  const admin = createAdminClient();
+  const { data: selectedRoles } = await admin
+    .from("roles")
+    .select("id, name")
+    .in("id", parsed.data.role_ids);
+
+  const primaryRole = selectedRoles?.find((r) => r.id === parsed.data.primary_role_id);
+  if (!primaryRole || (selectedRoles ?? []).length !== parsed.data.role_ids.length) {
+    return errorState("Ruoli non validi.");
+  }
+
+  const roleNames = selectedRoles!.map((r) => r.name);
+
+  const sync = await syncUserRoles(
+    admin,
+    parsed.data.id,
+    roleNames,
+    primaryRole.name,
+  );
+  if (sync.error) return errorState(`Errore ruoli: ${sync.error}`);
 
   const { error } = await admin
     .from("users")
@@ -89,7 +111,6 @@ export async function updateUser(
       name: parsed.data.name,
       surname: parsed.data.surname,
       phone: parsed.data.phone,
-      role_id: parsed.data.role_id,
       status: parsed.data.status,
     })
     .eq("id", parsed.data.id);
@@ -97,6 +118,8 @@ export async function updateUser(
   if (error) return errorState(`Errore aggiornamento: ${error.message}`);
 
   revalidatePath("/utenti");
+  revalidatePath("/operatori-partner");
+  revalidatePath("/tesserati");
   return successState("Utente aggiornato.");
 }
 

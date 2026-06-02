@@ -13,6 +13,7 @@ type UserRow = {
   surname: string | null;
   phone: string | null;
   role_id: string | null;
+  role_ids?: string[];
   status: "active" | "inactive";
 };
 
